@@ -8,7 +8,7 @@ from selenium import webdriver
 from authlib.integrations.requests_client import OAuth2Session
 import yaml
 import time, os
-import tb
+import tb, lcsc
 
 def get_user_access_token(client_id, client_secret, scope):
     client = OAuth2Session(client_id, client_secret, scope=scope,redirect_uri='http://localhost/')
@@ -98,7 +98,9 @@ def main():
     with open('config.yaml', 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
-    tb_item_list = tb.tb()
+    # tb_item_list = tb.tb()
+    # lcsc_item_list = lcsc.lcsc()
+    item_list = tb.tb() + lcsc.lcsc()
 
     token = get_user_access_token(config['client_id'], config['client_secret'], 'base:record:create')
     # 创建client
@@ -109,7 +111,7 @@ def main():
 
     user = lark_get_user_info(client, token['access_token'])
     userinfo = {'open_id': user.open_id, 'mobile': config.get('user_mobile',user.mobile)}
-    lark_add_records(client, tb_item_list, config['app_token'], config['table_id'],token['access_token'], userinfo)
+    lark_add_records(client, item_list, config['app_token'], config['table_id'],token['access_token'], userinfo)
 
 if __name__ == "__main__":
     main()

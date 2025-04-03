@@ -18,12 +18,11 @@ def first_login(url, driver, title):
         print("等待打开登录后的页面...")
         time.sleep(5)
         if driver.title == title:
-            # wait_flag = 0
             break
 
 def save_cookies(driver, cookies_path):
-    cookies_dict = driver.get_cookies()
-    cookies_json = json.dumps(cookies_dict)  # 转换成字符串保存
+    cookies_list = driver.get_cookies()
+    cookies_json = json.dumps(cookies_list)  # 转换成字符串保存
 
     with open(cookies_path, 'w') as f:
         f.write(cookies_json)
@@ -38,7 +37,7 @@ def login(driver, cookies_path):
             # driver.add_cookie(cookie)
             driver.execute_cdp_cmd('Network.setCookie', cookie)
 
-def get_xhr_logs(driver):
+def get_xhr_logs(driver, filter_str):
     log_xhr_id_array = []
     log_list = driver.get_log('performance')
     for log in log_list:
@@ -46,7 +45,7 @@ def get_xhr_logs(driver):
         try:
             log = json.loads(message_)['message']
                     # 去掉静态js、css等，仅保留xhr请求
-            if log['params']['type'].upper() == "XHR" and log['params']['request']['url'].startswith('https://h5api.m.taobao.com/h5/mtop.trade.query.bag'):
+            if log['params']['type'].upper() == "XHR" and log['params']['request']['url'].startswith(filter_str):
                 log_xhr_id_array.append(log['params']['requestId'])
 
         except:
@@ -65,7 +64,7 @@ def get_item(data,seller_id):
 def get_cart(url, driver):
     driver.get(url)
     time.sleep(5)
-    request_id = get_xhr_logs(driver)
+    request_id = get_xhr_logs(driver, 'https://h5api.m.taobao.com/h5/mtop.trade.query.bag')
     for rid in request_id:
         content = driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': rid})
         try:
